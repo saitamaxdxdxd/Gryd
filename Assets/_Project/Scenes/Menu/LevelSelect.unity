@@ -813,7 +813,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f3f12941f856d4079af665a37ccd5985, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gryd.Menu.LevelSelectController
-  _totalLevels: 20
+  _registry: {fileID: 11400000, guid: 61203b9cfe7d34291a443ca22f26c5b4, type: 2}
   _levelsPerPage: 6
   _levelButtonPrefab: {fileID: 2789805105015807369, guid: 10d5c44e4f49c4ff98210b10d257cbeb, type: 3}
   _gridContainer: {fileID: 1626675432}

@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0260ca0e0f8f24ba5a12f82a0d04073e, type: 3}
   m_Name: Level_02
   m_EditorClassIdentifier: Assembly-CSharp::Gryd.Data.LevelData
-  levelFile: {fileID: 4900000, guid: 44119912f4d43411fb96fbe7e82613bd, type: 3}
+  levelFile: {fileID: 4900000, guid: f4cf5eb3b11434bf68057bb4ad6c3bc7, type: 3}
   tileSize: 1

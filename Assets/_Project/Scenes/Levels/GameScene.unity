@@ -290,8 +290,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c054e704c9c0340c496c5690296e840c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gryd.Gameplay.LevelBuilder
-  _levelData: {fileID: 11400000, guid: 080e57edce1bc473c887944289fa5aee, type: 2}
+  _registry: {fileID: 11400000, guid: 61203b9cfe7d34291a443ca22f26c5b4, type: 2}
   _tilePrefab: {fileID: 6345530200608615084, guid: 1ca4b0bfb4da847739a697736d61c9e1, type: 3}
+  _decorPrefab: {fileID: 6345530200608615084, guid: c9a8f6365d1db4e2ba616b8ab3364d6b, type: 3}
   _tileGap: 0.3
 --- !u!4 &90585934
 Transform:
@@ -725,7 +726,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -3793550233946815821, guid: 23ff3a4c47f1d444dadf2667a523bad4, type: 3}
       propertyPath: _speedMultiplier
-      value: 0.5
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 2196150460660336454, guid: 23ff3a4c47f1d444dadf2667a523bad4, type: 3}
       propertyPath: m_LocalPosition.x
@@ -843,7 +844,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 4
+  orthographic size: 3
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -931,6 +932,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Gryd.Gameplay.CameraController
   _target: {fileID: 79345655}
+  _offset: {x: -2.5, y: 0, z: -3.5}
   _smoothSpeed: 10
 --- !u!1 &379908010
 GameObject:

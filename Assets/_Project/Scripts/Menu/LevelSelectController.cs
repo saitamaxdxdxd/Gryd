@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Gryd.Core;
+using Gryd.Data;
 using Gryd.Managers;
 
 namespace Gryd.Menu
@@ -15,7 +16,7 @@ namespace Gryd.Menu
         public static int SelectedLevel { get; private set; }
 
         [Header("Config")]
-        [SerializeField] private int _totalLevels = 20;
+        [SerializeField] private LevelRegistry _registry;
         [SerializeField] private int _levelsPerPage = 9;
 
         [Header("Referencias")]
@@ -27,7 +28,8 @@ namespace Gryd.Menu
 
         private int _currentPage = 0;
         private int _unlockedLevels;
-        private int TotalPages => Mathf.CeilToInt((float)_totalLevels / _levelsPerPage);
+        private int TotalLevels => _registry != null ? _registry.levels.Length : 0;
+        private int TotalPages => Mathf.CeilToInt((float)TotalLevels / _levelsPerPage);
 
         private void Start()
         {
@@ -57,7 +59,7 @@ namespace Gryd.Menu
 
             // Generar botones de esta página
             int startLevel = page * _levelsPerPage + 1;
-            int endLevel = Mathf.Min(startLevel + _levelsPerPage - 1, _totalLevels);
+            int endLevel = Mathf.Min(startLevel + _levelsPerPage - 1, TotalLevels);
 
             for (int i = startLevel; i <= endLevel; i++)
             {

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Gryd.Data;
+using Gryd.Menu;
 
 namespace Gryd.Gameplay
 {
@@ -11,10 +12,12 @@ namespace Gryd.Gameplay
         private const int TileSpawn = 2;
         private const int TileDecor = 3;
 
-        [SerializeField] private LevelData _levelData;
+        [SerializeField] private LevelRegistry _registry;
         [SerializeField] private GameObject _tilePrefab;
         [SerializeField] private GameObject _decorPrefab;
         [SerializeField] private float _tileGap = 0.1f;
+
+        private LevelData _levelData;
 
         public Vector3 SpawnPoint { get; private set; }
         public Vector2Int SpawnGridPos { get; private set; }
@@ -51,15 +54,24 @@ namespace Gryd.Gameplay
 
         private void BuildLevel()
         {
-            if (_levelData == null)
+            if (_registry == null)
             {
-                Debug.LogError("[LevelBuilder] LevelData no asignado.", this);
+                Debug.LogError("[LevelBuilder] LevelRegistry no asignado.", this);
                 return;
             }
 
-            if (_levelData.levelFile == null)
+            int index = LevelSelectController.SelectedLevel - 1;
+            if (index < 0 || index >= _registry.levels.Length)
             {
-                Debug.LogError("[LevelBuilder] LevelData no tiene archivo .txt asignado.", this);
+                Debug.LogError($"[LevelBuilder] Nivel {LevelSelectController.SelectedLevel} no existe en el registry.", this);
+                return;
+            }
+
+            _levelData = _registry.levels[index];
+
+            if (_levelData == null || _levelData.levelFile == null)
+            {
+                Debug.LogError($"[LevelBuilder] LevelData o levelFile nulo en índice {index}.", this);
                 return;
             }
 

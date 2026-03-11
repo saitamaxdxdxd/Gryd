@@ -118,6 +118,7 @@ Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration
 | `SoundData`        | Scripts/Data/ | AudioClip + volume + pitch + loop                             |
 | `LocalizationData` | Scripts/Data/ | Lista de LocalizationEntry (key / english / spanish)          |
 | `LevelData`        | Scripts/Data/ | `TextAsset levelFile` + `float tileSize`. Crear con `Gryd/Level Data`. Apunta a un `.json` en `_Project/Levels/` |
+| `LevelRegistry`    | Scripts/Data/ | Array de `LevelData[]`. Crear con `Gryd/Level Registry`. Fuente de verdad para LevelSelectController y LevelBuilder |
 
 #### Formato JSON de nivel (`_Project/Levels/Level_XX.json`)
 ```json
@@ -288,6 +289,7 @@ ScriptableObjects/
 - [X] **CameraController** — sigue al player en XZ, Y fijo para no vibrar con los saltos
 - [X] **Level_01** — cuadrado 7×7 con 3 capas de decor (13×13)
 - [X] **Level_02** — forma de cruz con spawn en centro (13×13)
+- [X] **LevelRegistry** — SO que mapea índice → LevelData. LevelSelectController y LevelBuilder lo referencian. Agregar nivel = arrastrar SO al array
 - [ ] **Win condition** — detectar cuando todos los tiles están encendidos → GameManager.LevelComplete()
 - [ ] Sistema de puntuación / pasos usados
 - [ ] Sistema de puntuación / pasos usados
