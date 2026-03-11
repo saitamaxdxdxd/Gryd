@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Gryd.Data;
+using Gryd.Managers;
 using Gryd.Menu;
 
 namespace Gryd.Gameplay
@@ -12,10 +14,33 @@ namespace Gryd.Gameplay
         private const int TileSpawn = 2;
         private const int TileDecor = 3;
 
+        [Serializable]
+        public struct EnemyPrefabEntry
+        {
+            public string type;
+            public GameObject prefab;
+        }
+
+        // Clases internas solo para parsear el JSON con JsonUtility
+        [Serializable] private class LevelJsonEnemies { public EnemyEntryJson[] enemies; }
+        [Serializable] private class EnemyEntryJson
+        {
+            public int    row;
+            public int    col;
+            public string dir      = "right";
+            public string type     = "basic";
+            public float  cadence  = 2f;
+            public float  speed    = 0.6f;
+        }
+
         [SerializeField] private LevelRegistry _registry;
+        [SerializeField] private int _defaultLevel = 1;
         [SerializeField] private GameObject _tilePrefab;
         [SerializeField] private GameObject _decorPrefab;
         [SerializeField] private float _tileGap = 0.1f;
+
+        [Header("Enemies")]
+        [SerializeField] private EnemyPrefabEntry[] _enemyPrefabs;
 
         private LevelData _levelData;
 
@@ -41,6 +66,19 @@ namespace Gryd.Gameplay
             return v == TileFloor || v == TileSpawn;
         }
 
+        /// <summary>
+        /// Como IsWalkable pero incluye TileDecor — usado por enemigos que
+        /// atraviesan el borde decorativo antes de entrar al área jugable.
+        /// </summary>
+        public bool IsTraversable(Vector2Int gridPos)
+        {
+            if (_grid == null) return false;
+            if (gridPos.y < 0 || gridPos.y >= _grid.Length) return false;
+            if (gridPos.x < 0 || gridPos.x >= _grid[gridPos.y].Length) return false;
+            int v = _grid[gridPos.y][gridPos.x];
+            return v == TileFloor || v == TileSpawn || v == TileDecor;
+        }
+
         public Vector3 GridToWorld(Vector2Int gridPos)
         {
             float step = _levelData.tileSize + _tileGap;
@@ -60,7 +98,8 @@ namespace Gryd.Gameplay
                 return;
             }
 
-            int index = LevelSelectController.SelectedLevel - 1;
+            int selected = LevelSelectController.SelectedLevel > 0 ? LevelSelectController.SelectedLevel : _defaultLevel;
+            int index = selected - 1;
             if (index < 0 || index >= _registry.levels.Length)
             {
                 Debug.LogError($"[LevelBuilder] Nivel {LevelSelectController.SelectedLevel} no existe en el registry.", this);
@@ -119,6 +158,58 @@ namespace Gryd.Gameplay
 
             if (!HasSpawnPoint)
                 Debug.LogWarning("[LevelBuilder] No se encontró celda de spawn (S) en el nivel.", this);
+
+            SpawnEnemies(_levelData.levelFile.text);
+        }
+
+        private void SpawnEnemies(string json)
+        {
+            LevelJsonEnemies data = JsonUtility.FromJson<LevelJsonEnemies>(json);
+            if (data == null || data.enemies == null) return;
+
+            foreach (EnemyEntryJson entry in data.enemies)
+            {
+                GameObject prefab = GetEnemyPrefab(entry.type);
+                if (prefab == null)
+                {
+                    Debug.LogWarning($"[LevelBuilder] Prefab de enemigo tipo '{entry.type}' no asignado en Inspector.", this);
+                    continue;
+                }
+
+                Vector2Int pos = new Vector2Int(entry.col - 1, entry.row - 1); // JSON base-1 → array base-0
+                Vector2Int dir = ParseDirection(entry.dir);
+
+                GameObject go = new GameObject($"EnemySpawner_{entry.type}_{entry.row}_{entry.col}");
+                go.transform.SetParent(transform);
+
+                EnemySpawner spawner = go.AddComponent<EnemySpawner>();
+                spawner.Init(prefab, this, pos, dir, entry.cadence, entry.speed);
+            }
+        }
+
+        private GameObject GetEnemyPrefab(string type)
+        {
+            if (_enemyPrefabs == null) return null;
+            foreach (EnemyPrefabEntry entry in _enemyPrefabs)
+                if (entry.type == type) return entry.prefab;
+            return null;
+        }
+
+        private static Vector2Int ParseDirection(string dir) => dir switch
+        {
+            "left"  => Vector2Int.left,
+            "up"    => Vector2Int.down, // fila decrece → hacia fila 1 (arriba visual)
+            "down"  => Vector2Int.up,   // fila crece   → hacia fila 13 (abajo visual)
+            _       => Vector2Int.right
+        };
+
+        public void CheckWinCondition()
+        {
+            foreach (TileOscillator tile in _tiles.Values)
+            {
+                if (!tile.IsLit) return;
+            }
+            GameManager.Instance.LevelComplete();
         }
 
         // Parsea { "grid": [[3,3,3],[1,2,1],...] } sin JsonUtility (no soporta int[][])

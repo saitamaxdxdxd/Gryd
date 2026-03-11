@@ -76,33 +76,35 @@ Boot → MainMenu → LevelSelect → Loading (3s async) → GameScene
 
 ### Input
 
-| Script             | Ruta           | Función                                                                  |
-| ------------------ | -------------- | ------------------------------------------------------------------------ |
-| `IInputHandler`  | Scripts/Input/ | Interfaz: OnTap, OnSwipe, OnHoldStart, OnHoldEnd, OnPointerDown/Up       |
-| `InputHandler`   | Scripts/Input/ | Touch (mobile, primer dedo) + Mouse (PC/Editor). Agregar a un GameObject |
+| Script            | Ruta           | Función                                                                 |
+| ----------------- | -------------- | ------------------------------------------------------------------------ |
+| `IInputHandler` | Scripts/Input/ | Interfaz: OnTap, OnSwipe, OnHoldStart, OnHoldEnd, OnPointerDown/Up       |
+| `InputHandler`  | Scripts/Input/ | Touch (mobile, primer dedo) + Mouse (PC/Editor). Agregar a un GameObject |
 
 Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration` (s), `_holdDuration` (s).
 
 ### Menu
 
-| Script                    | Ruta          | Función                                                          |
-| ------------------------- | ------------- | ---------------------------------------------------------------- |
-| `MainMenuController`    | Scripts/Menu/ | Botones Play / Settings / Quit. Ref a `SettingsController`      |
-| `LevelSelectController` | Scripts/Menu/ | Grilla paginada con flechas, desbloqueo vía SaveManager          |
-| `LevelButton`           | Scripts/Menu/ | Botón individual, onClick conectado por código en Setup()       |
-| `SettingsController`    | Scripts/Menu/ | Sliders música/SFX + botones EN/ES. Llamar Open() / Close()     |
+| Script                    | Ruta          | Función                                                     |
+| ------------------------- | ------------- | ------------------------------------------------------------ |
+| `MainMenuController`    | Scripts/Menu/ | Botones Play / Settings / Quit. Ref a `SettingsController` |
+| `LevelSelectController` | Scripts/Menu/ | Grilla paginada con flechas, desbloqueo vía SaveManager     |
+| `LevelButton`           | Scripts/Menu/ | Botón individual, onClick conectado por código en Setup()  |
+| `SettingsController`    | Scripts/Menu/ | Sliders música/SFX + botones EN/ES. Llamar Open() / Close() |
 
 ### Gameplay
 
-| Script                      | Ruta              | Función                                                                          |
-| --------------------------- | ----------------- | -------------------------------------------------------------------------------- |
-| `PauseController`         | Scripts/Gameplay/ | Escucha GameManager.OnStateChanged, Escape con InputSystem                       |
-| `GameOverController`      | Scripts/Gameplay/ | Panel GameOver — Retry / Menu. Se activa con estado GameOver                     |
-| `LevelCompleteController` | Scripts/Gameplay/ | Panel LevelComplete — Next / Menu. Desbloquea siguiente nivel                    |
-| `LevelBuilder`            | Scripts/Gameplay/ | Lee `LevelData` SO y construye el grid en `Awake()`. Expone SpawnPoint, IsWalkable, GridToWorld, GetTile |
-| `PlayerController`        | Scripts/Gameplay/ | Movimiento continuo tile-a-tile con salto animado. WASD + flechas + swipe        |
-| `TileOscillator`          | Scripts/Gameplay/ | Levitación sutil por tile con phase random. Press/Release para efecto de peso + cambio de material |
-| `CameraController`        | Scripts/Gameplay/ | Sigue al player en XZ, Y fijo (ignora saltos). Smooth speed opcional             |
+| Script                      | Ruta              | Función                                                                                                     |
+| --------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `PauseController`         | Scripts/Gameplay/ | Escucha GameManager.OnStateChanged, Escape con InputSystem                                                   |
+| `GameOverController`      | Scripts/Gameplay/ | Panel GameOver — Retry / Menu. Se activa con estado GameOver                                                |
+| `LevelCompleteController` | Scripts/Gameplay/ | Panel LevelComplete — Next / Menu. Desbloquea siguiente nivel (lee LevelSelectController.SelectedLevel)      |
+| `LevelBuilder`            | Scripts/Gameplay/ | Lee `LevelData` SO y construye el grid en `Awake()`. Expone SpawnPoint, IsWalkable, IsTraversable, GridToWorld, GetTile, CheckWinCondition |
+| `PlayerController`        | Scripts/Gameplay/ | Movimiento continuo tile-a-tile con salto animado. WASD + flechas + swipe. Expone `GridPos`. Dispara `OnFirstMove` (estático) al primer input |
+| `TileOscillator`          | Scripts/Gameplay/ | Levitación sutil por tile con phase random. Press/Release para efecto de peso + cambio de material. Expone `IsLit` |
+| `CameraController`        | Scripts/Gameplay/ | Sigue al player en XZ, Y fijo (ignora saltos). Smooth speed opcional                                         |
+| `EnemyController`         | Scripts/Gameplay/ | Clase base de enemigos. Movimiento tile-a-tile con cadencia. Herencia para nuevos tipos. `EnemyController.Active` = lista global |
+| `EnemySpawner`            | Scripts/Gameplay/ | Creado por LevelBuilder en runtime. Instancia enemigos, espera cadencia y reenvía. Arranca con `PlayerController.OnFirstMove` |
 
 ### UI
 
@@ -112,15 +114,16 @@ Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration
 
 ### Data (ScriptableObjects)
 
-| Script               | Ruta          | Función                                                      |
-| -------------------- | ------------- | ------------------------------------------------------------- |
-| `SaveData`         | Scripts/Data/ | Modelo JSON: language, unlockedLevels, musicVolume, sfxVolume |
-| `SoundData`        | Scripts/Data/ | AudioClip + volume + pitch + loop                             |
-| `LocalizationData` | Scripts/Data/ | Lista de LocalizationEntry (key / english / spanish)          |
+| Script               | Ruta          | Función                                                                                                                   |
+| -------------------- | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `SaveData`         | Scripts/Data/ | Modelo JSON: language, unlockedLevels, musicVolume, sfxVolume                                                              |
+| `SoundData`        | Scripts/Data/ | AudioClip + volume + pitch + loop                                                                                          |
+| `LocalizationData` | Scripts/Data/ | Lista de LocalizationEntry (key / english / spanish)                                                                       |
 | `LevelData`        | Scripts/Data/ | `TextAsset levelFile` + `float tileSize`. Crear con `Gryd/Level Data`. Apunta a un `.json` en `_Project/Levels/` |
-| `LevelRegistry`    | Scripts/Data/ | Array de `LevelData[]`. Crear con `Gryd/Level Registry`. Fuente de verdad para LevelSelectController y LevelBuilder |
+| `LevelRegistry`    | Scripts/Data/ | Array de `LevelData[]`. Crear con `Gryd/Level Registry`. Fuente de verdad para LevelSelectController y LevelBuilder    |
 
 #### Formato JSON de nivel (`_Project/Levels/Level_XX.json`)
+
 ```json
 {
   "grid": [
@@ -129,15 +132,21 @@ Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration
     [3, 1, 2, 1, 3],
     [3, 1, 1, 1, 3],
     [3, 3, 3, 3, 3]
+  ],
+  "enemies": [
+    { "row": 1, "col": 3, "dir": "down", "type": "basic", "cadence": 2.0, "speed": 0.5 }
   ]
 }
 ```
+
 - `0` = vacío
 - `1` = tile jugable
 - `2` = spawn del jugador (también coloca tile)
-- `3` = decor (no caminable, prefab distinto)
+- `3` = decor (no caminable por player, sí traversable por enemigos)
 
-Parser manual en `LevelBuilder.ParseGrid()` — no usa JsonUtility (no soporta `int[][]`). Colapsa whitespace antes de parsear para soportar pretty-print.
+**enemies** (opcional, base-1): `row`/`col` en lenguaje natural (fila 1 = primera fila visual). `dir`: `right/left/down/up` en sentido visual. `cadence` = segundos entre respawns. `speed` = segundos entre pasos.
+
+Parser manual en `LevelBuilder.ParseGrid()` — no usa JsonUtility (no soporta `int[][]`). `enemies` se parsean con JsonUtility sobre clase auxiliar. Ambos soportan pretty-print.
 
 ---
 
@@ -290,8 +299,9 @@ ScriptableObjects/
 - [X] **Level_01** — cuadrado 7×7 con 3 capas de decor (13×13)
 - [X] **Level_02** — forma de cruz con spawn en centro (13×13)
 - [X] **LevelRegistry** — SO que mapea índice → LevelData. LevelSelectController y LevelBuilder lo referencian. Agregar nivel = arrastrar SO al array
-- [ ] **Win condition** — detectar cuando todos los tiles están encendidos → GameManager.LevelComplete()
-- [ ] Sistema de puntuación / pasos usados
+- [X] **Win condition** — detectar cuando todos los tiles están encendidos → GameManager.LevelComplete()
+- [X] **Enemies** — `EnemyController` (base) + `EnemySpawner`. Traversan decor. Arrancan con primer input del player (`OnFirstMove`). Tipos futuros: JumpEnemy, DeactivatorEnemy, Boss
+- [ ] **Vidas del player** — N vidas; al tocar enemigo pierde 1 vida, si llega a 0 → GameManager.GameOver(). UI de vidas en HUD
 - [ ] Sistema de puntuación / pasos usados
 - [ ] Object Pooling para elementos frecuentes
 

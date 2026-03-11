@@ -1,6 +1,7 @@
 using UnityEngine;
 using Gryd.Core;
 using Gryd.Managers;
+using Gryd.Menu;
 
 namespace Gryd.Gameplay
 {
@@ -10,7 +11,6 @@ namespace Gryd.Gameplay
     ///
     /// Setup en Inspector:
     ///   - Asignar _panel (el GameObject raíz del panel, empieza desactivado)
-    ///   - Asignar _thisLevelIndex (índice del nivel actual, base 1)
     ///   - Conectar Btn_Next  → OnNextPressed()
     ///   - Conectar Btn_Menu  → OnMenuPressed()
     /// </summary>
@@ -18,8 +18,9 @@ namespace Gryd.Gameplay
     {
         [SerializeField] private GameObject _panel;
 
-        [Tooltip("Índice de este nivel (base 1). El siguiente nivel = thisLevelIndex + 1.")]
-        [SerializeField] private int _thisLevelIndex = 1;
+        private int CurrentLevel => LevelSelectController.SelectedLevel > 0
+            ? LevelSelectController.SelectedLevel
+            : 1;
 
         private void OnEnable()
         {
@@ -46,7 +47,7 @@ namespace Gryd.Gameplay
 
         private void UnlockNextLevel()
         {
-            int nextLevel = _thisLevelIndex + 1;
+            int nextLevel = CurrentLevel + 1;
             if (nextLevel > SaveManager.Instance.Data.unlockedLevels)
             {
                 SaveManager.Instance.Data.unlockedLevels = nextLevel;
@@ -61,7 +62,7 @@ namespace Gryd.Gameplay
         {
             AudioManager.Instance.PlaySFX(AudioManager.Instance.sfxButtonClick);
             _panel.SetActive(false);
-            // TODO: cuando haya escenas de nivel individuales, cargar _thisLevelIndex + 1
+            // TODO: cuando haya escenas de nivel individuales, cargar CurrentLevel + 1
             // Por ahora vuelve a LevelSelect para elegir el siguiente nivel desbloqueado
             GameManager.Instance.ExitToMenu();
             SceneLoader.Instance.Load(SceneNames.LevelSelect);

@@ -1,7 +1,9 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Gryd.Input;
+using Gryd.Managers;
 
 namespace Gryd.Gameplay
 {
@@ -15,8 +17,12 @@ namespace Gryd.Gameplay
         [SerializeField] private bool _doubleJump = false;
 
         private LevelBuilder _builder;
+        public static event Action OnFirstMove;
+
+        public Vector2Int GridPos => _gridPos;
         private Vector2Int _gridPos;
         private Vector2Int _currentDir = Vector2Int.zero;
+        private bool _hasMoved;
         private float _groundedY;
         private bool _isMoving;
         private TileOscillator _currentTile;
@@ -50,6 +56,7 @@ namespace Gryd.Gameplay
 
             _currentTile = _builder.GetTile(_gridPos);
             _currentTile?.Press();
+            _builder.CheckWinCondition();
         }
 
         private void OnEnable()
@@ -66,6 +73,8 @@ namespace Gryd.Gameplay
 
         private void Update()
         {
+            if (GameManager.Instance.CurrentState != GameState.Playing) return;
+
             // Input se lee siempre — permite cambiar dirección mid-salto
             Vector2Int pressed = ReadKeyboard();
             if (pressed != Vector2Int.zero)
@@ -100,6 +109,11 @@ namespace Gryd.Gameplay
 
         private void TryMove(Vector2Int dir)
         {
+            if (!_hasMoved)
+            {
+                _hasMoved = true;
+                OnFirstMove?.Invoke();
+            }
             int steps = _doubleJump && _builder.IsWalkable(_gridPos + dir * 2) ? 2 : 1;
             Vector2Int target = _gridPos + dir * steps;
 
@@ -116,6 +130,18 @@ namespace Gryd.Gameplay
             destination.y = _groundedY;
 
             StartCoroutine(JumpTo(destination));
+        }
+
+        private void CheckEnemyCollision()
+        {
+            foreach (EnemyController enemy in EnemyController.Active)
+            {
+                if (enemy.GridPos == _gridPos)
+                {
+                    GameManager.Instance.GameOver();
+                    return;
+                }
+            }
         }
 
         private IEnumerator JumpTo(Vector3 destination)
@@ -137,6 +163,8 @@ namespace Gryd.Gameplay
             transform.position = destination;
             _currentTile = _builder.GetTile(_gridPos);
             _currentTile?.Press();
+            CheckEnemyCollision();
+            _builder.CheckWinCondition();
             _isMoving = false;
         }
     }

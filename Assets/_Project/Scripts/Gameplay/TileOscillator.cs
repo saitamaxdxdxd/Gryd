@@ -19,11 +19,17 @@ namespace Gryd.Gameplay
         private bool _pressed;
         private float _pressT; // 0 = normal, 1 = presionado
 
+        public bool IsLit { get; private set; }
+
+        private void Awake()
+        {
+            _renderer = GetComponentInChildren<Renderer>();
+        }
+
         private void Start()
         {
             _phase = Random.Range(0f, Mathf.PI * 2f);
             _baseY = transform.position.y;
-            _renderer = GetComponentInChildren<Renderer>();
         }
 
         private void Update()
@@ -41,6 +47,7 @@ namespace Gryd.Gameplay
         public void Press()
         {
             _pressed = true;
+            IsLit = true;
             if (_renderer != null && _litMaterial != null)
                 _renderer.material = _litMaterial;
         }
