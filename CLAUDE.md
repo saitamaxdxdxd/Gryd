@@ -94,11 +94,15 @@ Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration
 
 ### Gameplay
 
-| Script                      | Ruta              | Función                                                          |
-| --------------------------- | ----------------- | ---------------------------------------------------------------- |
-| `PauseController`         | Scripts/Gameplay/ | Escucha GameManager.OnStateChanged, Escape con InputSystem       |
-| `GameOverController`      | Scripts/Gameplay/ | Panel GameOver — Retry / Menu. Se activa con estado GameOver     |
-| `LevelCompleteController` | Scripts/Gameplay/ | Panel LevelComplete — Next / Menu. Desbloquea siguiente nivel    |
+| Script                      | Ruta              | Función                                                                          |
+| --------------------------- | ----------------- | -------------------------------------------------------------------------------- |
+| `PauseController`         | Scripts/Gameplay/ | Escucha GameManager.OnStateChanged, Escape con InputSystem                       |
+| `GameOverController`      | Scripts/Gameplay/ | Panel GameOver — Retry / Menu. Se activa con estado GameOver                     |
+| `LevelCompleteController` | Scripts/Gameplay/ | Panel LevelComplete — Next / Menu. Desbloquea siguiente nivel                    |
+| `LevelBuilder`            | Scripts/Gameplay/ | Lee `LevelData` SO y construye el grid en `Awake()`. Expone SpawnPoint, IsWalkable, GridToWorld, GetTile |
+| `PlayerController`        | Scripts/Gameplay/ | Movimiento continuo tile-a-tile con salto animado. WASD + flechas + swipe        |
+| `TileOscillator`          | Scripts/Gameplay/ | Levitación sutil por tile con phase random. Press/Release para efecto de peso + cambio de material |
+| `CameraController`        | Scripts/Gameplay/ | Sigue al player en XZ, Y fijo (ignora saltos). Smooth speed opcional             |
 
 ### UI
 
@@ -113,6 +117,26 @@ Parámetros configurables en Inspector: `_swipeThreshold` (px), `_tapMaxDuration
 | `SaveData`         | Scripts/Data/ | Modelo JSON: language, unlockedLevels, musicVolume, sfxVolume |
 | `SoundData`        | Scripts/Data/ | AudioClip + volume + pitch + loop                             |
 | `LocalizationData` | Scripts/Data/ | Lista de LocalizationEntry (key / english / spanish)          |
+| `LevelData`        | Scripts/Data/ | `TextAsset levelFile` + `float tileSize`. Crear con `Gryd/Level Data`. Apunta a un `.json` en `_Project/Levels/` |
+
+#### Formato JSON de nivel (`_Project/Levels/Level_XX.json`)
+```json
+{
+  "grid": [
+    [3, 3, 3, 3, 3],
+    [3, 1, 1, 1, 3],
+    [3, 1, 2, 1, 3],
+    [3, 1, 1, 1, 3],
+    [3, 3, 3, 3, 3]
+  ]
+}
+```
+- `0` = vacío
+- `1` = tile jugable
+- `2` = spawn del jugador (también coloca tile)
+- `3` = decor (no caminable, prefab distinto)
+
+Parser manual en `LevelBuilder.ParseGrid()` — no usa JsonUtility (no soporta `int[][]`). Colapsa whitespace antes de parsear para soportar pretty-print.
 
 ---
 
@@ -195,14 +219,16 @@ public void OnSettingsPressed() => _settings.Open();
 ```
 Scripts/
 ├── Core/        → SceneNames, BootLoader, LoadingController
-├── Gameplay/    → PauseController (+ mecánicas futuras)
+├── Gameplay/    → PauseController, LevelBuilder, PlayerController, TileOscillator, CameraController
 ├── Input/       → IInputHandler, InputHandler
 ├── Managers/    → SceneLoader, SaveManager, AudioManager, LocalizationManager, GameManager
 ├── Menu/        → MainMenuController, LevelSelectController, LevelButton, SettingsController
 ├── UI/          → LocalizedText (+ componentes reutilizables futuros)
-├── Data/        → SaveData, SoundData, LocalizationData
+├── Data/        → SaveData, SoundData, LocalizationData, LevelData
 └── Utils/       → Helpers, Extensions, Constants (pendiente)
 
+Materials/           → materiales del juego (tile default, tile lit, player, etc.)
+Shaders/             → shaders custom
 Resources/           → LocalizationData.asset (necesario para auto-carga)
 Scenes/
 ├── Core/        → Boot, Loading
@@ -210,6 +236,7 @@ Scenes/
 └── Levels/      → GameScene + niveles futuros
 ScriptableObjects/
 ├── Audio/       → SoundData assets
+├── Levels/      → LevelData assets (Level_01, Level_02, ...)
 ├── Settings/    → LocalizationData asset (copia en Resources/ también)
 └── Items/
 ```
@@ -253,9 +280,17 @@ ScriptableObjects/
 
 ### Siguiente — Gameplay
 
-- [ ] Definir mecánica principal del juego
-- [ ] Primer nivel jugable en GameScene
-- [ ] Sistema de puntuación / objetivo del nivel
+- [X] **Mecánica principal** — player salta tile-a-tile en un grid, los tiles se iluminan al pisarlos, objetivo: encender todos
+- [X] **LevelData** — SO con `TextAsset levelFile` + `float tileSize`. JSON de arrays de int (0/1/2/3)
+- [X] **LevelBuilder** — construye el grid en Awake(), soporta decor (3) con prefab separado
+- [X] **PlayerController** — movimiento continuo con salto animado, WASD + flechas + swipe, double jump toggle
+- [X] **TileOscillator** — levitación independiente por tile, press/release con material swap permanente
+- [X] **CameraController** — sigue al player en XZ, Y fijo para no vibrar con los saltos
+- [X] **Level_01** — cuadrado 7×7 con 3 capas de decor (13×13)
+- [X] **Level_02** — forma de cruz con spawn en centro (13×13)
+- [ ] **Win condition** — detectar cuando todos los tiles están encendidos → GameManager.LevelComplete()
+- [ ] Sistema de puntuación / pasos usados
+- [ ] Sistema de puntuación / pasos usados
 - [ ] Object Pooling para elementos frecuentes
 
 ### Más adelante

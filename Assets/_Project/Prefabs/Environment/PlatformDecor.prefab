@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2532403529676597617}
   - component: {fileID: 2585355615268729943}
   m_Layer: 0
-  m_Name: Platform
+  m_Name: PlatformDecor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -68,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: dfb150d4ff2a4417a8f0cf03a8ff3386, type: 2}
+  - {fileID: 2100000, guid: 5b1084a780f82434dbaa6915cf9d0618, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
